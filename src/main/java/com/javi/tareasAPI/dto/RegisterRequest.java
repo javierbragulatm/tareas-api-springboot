@@ -2,7 +2,7 @@ package com.javi.tareasAPI.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class LoginRequest {
+public class RegisterRequest {
 
     @NotBlank(message = "El usuario es obligatorio")
     private String username;

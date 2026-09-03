@@ -54,4 +54,4 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 👨‍💻 Autor
 
-Proyecto desarrollado por **Javier Bragulat** como parte de mi portfolio de desarrollo Backend con Spring Boot.
+Proyecto desarrollado por **Javier Bragulat** como parte de mi portafolio de desarrollo Backend con Spring Boot.
