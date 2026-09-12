@@ -1,0 +1,17 @@
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\config\SecurityConfig.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\controller\AuthController.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\controller\TareaController.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\dto\LoginRequest.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\dto\RegisterRequest.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\dto\TareaDTO.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\exception\GlobalExceptionHandler.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\exception\TareaNoEncontradaException.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\model\Tarea.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\model\Usuario.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\repository\TareaRepository.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\repository\UsuarioRepository.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\security\JwtAuthenticationFilter.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\security\JwtService.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\service\TareaService.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\service\UsuarioService.java
+C:\Users\Javi\OneDrive\Escritorio\WSpruebas\WS\tareasAPI\tareasAPI\src\main\java\com\javi\tareasAPI\TareasApiApplication.java

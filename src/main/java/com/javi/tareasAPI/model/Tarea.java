@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Tarea {
@@ -18,6 +20,10 @@ public class Tarea {
 	private String titulo;
 	
 	private boolean completada;
+	
+	@ManyToOne
+	@JoinColumn(name = "usuario_id", nullable = false)
+	private Usuario usuario;
 	
 	public Tarea() {
 		
@@ -51,6 +57,14 @@ public class Tarea {
 	
 	public void setCompletada(boolean completada) {
 		this.completada = completada;
+	}
+	
+	public Usuario getUsuario() {
+	    return usuario;
+	}
+
+	public void setUsuario(Usuario usuario) {
+	    this.usuario = usuario;
 	}
 
 	

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.javi.tareasAPI.repository.TareaRepository;
 import com.javi.tareasAPI.dto.TareaDTO;
 import com.javi.tareasAPI.exception.TareaNoEncontradaException;
@@ -17,75 +16,162 @@ import org.springframework.data.domain.Pageable;
 
 import org.springframework.data.domain.Sort;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.javi.tareasAPI.model.Usuario;
+import com.javi.tareasAPI.repository.UsuarioRepository;
+
 @Service
 public class TareaService {
 
-	@Autowired
-	private TareaRepository repository;
+	private final TareaRepository repository;
+	private final UsuarioRepository usuarioRepository;
+	
+	public TareaService(
+	        TareaRepository repository,
+	        UsuarioRepository usuarioRepository) {
+
+	    this.repository = repository;
+	    this.usuarioRepository = usuarioRepository;
+	}
+
 
 	public List<TareaDTO> obtenerTareas() {
-		List<Tarea> lista = repository.findAll();
 
-		List<TareaDTO> listaDTO = new ArrayList<TareaDTO>();
+	    String username =
+	            SecurityContextHolder
+	                    .getContext()
+	                    .getAuthentication()
+	                    .getName();
 
-		for (Tarea tarea : lista) {
-			TareaDTO dto= new TareaDTO(tarea.getId(),tarea.getTitulo());
-			listaDTO.add(dto);
-		}
+	    List<Tarea> lista =
+	            repository.findByUsuarioUsername(username);
 
-		return listaDTO;
+	    List<TareaDTO> listaDTO =
+	            new ArrayList<>();
+
+	    for (Tarea tarea : lista) {
+
+	        TareaDTO dto =
+	                new TareaDTO(
+	                        tarea.getId(),
+	                        tarea.getTitulo());
+
+	        listaDTO.add(dto);
+	    }
+
+	    return listaDTO;
 	}
 
 	public Tarea crearTarea(Tarea tarea) {
 
-		return repository.save(tarea);
+	    Usuario usuario = obtenerUsuarioActual();
+
+	    tarea.setUsuario(usuario);
+
+	    return repository.save(tarea);
 	}
 
 	public Tarea obtenerTarea(Integer id) {
 
-		return repository.findById(id).orElseThrow(() -> new TareaNoEncontradaException(id));
+	    String username =
+	            SecurityContextHolder
+	                    .getContext()
+	                    .getAuthentication()
+	                    .getName();
+
+	    return repository
+	            .findByIdAndUsuarioUsername(
+	                    id,
+	                    username)
+	            .orElseThrow(() ->
+	                    new TareaNoEncontradaException(id));
 	}
 
-	public Tarea updateTarea(Integer id, Tarea tareaActualizada) {
+	public Tarea updateTarea(
+	        Integer id,
+	        Tarea tareaActualizada) {
 
-	    Tarea tarea = repository.findById(id)
-	            .orElseThrow(() -> new TareaNoEncontradaException(id));
+	    String username =
+	            SecurityContextHolder
+	                    .getContext()
+	                    .getAuthentication()
+	                    .getName();
 
-	    tarea.setTitulo(tareaActualizada.getTitulo());
-	    tarea.setCompletada(tareaActualizada.isCompletada());
+	    Tarea tarea =
+	            repository
+	                    .findByIdAndUsuarioUsername(
+	                            id,
+	                            username)
+	                    .orElseThrow(() ->
+	                            new TareaNoEncontradaException(id));
+
+	    tarea.setTitulo(
+	            tareaActualizada.getTitulo());
+
+	    tarea.setCompletada(
+	            tareaActualizada.isCompletada());
 
 	    return repository.save(tarea);
-
 	}
 	
 	public void deleteTarea(Integer id) {
 
-		repository.deleteById(id);
+	    String username =
+	            SecurityContextHolder
+	                    .getContext()
+	                    .getAuthentication()
+	                    .getName();
 
+	    Tarea tarea =
+	            repository
+	                    .findByIdAndUsuarioUsername(
+	                            id,
+	                            username)
+	                    .orElseThrow(() ->
+	                            new TareaNoEncontradaException(id));
+
+	    repository.delete(tarea);
 	}
 
 	public List<Tarea> obtenerCompletadas() {
+	    String username = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication()
+	            .getName();
 
-		return repository.findByCompletada(true);
-
+	    return repository.findByUsuarioUsernameAndCompletada(username, true);
 	}
 
 	public List<Tarea> obtenerPendientes() {
+	    String username = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication()
+	            .getName();
 
-		return repository.findByCompletada(false);
+	    return repository.findByUsuarioUsernameAndCompletada(username, false);
 	}
 
 	public List<Tarea> buscarPorTitulo(String texto) {
+	    String username = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication()
+	            .getName();
 
-		return repository.findByTituloContaining(texto);
-
+	    return repository.findByUsuarioUsernameAndTituloContaining(username, texto);
 	}
 	
 	public Page<TareaDTO> obtenerTareasPaginadas(int page, int size) {
 
+		String username = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication()
+	            .getName();
+		
 	    Pageable pageable = PageRequest.of(page, size);
 
-	    Page<Tarea> pagina = repository.findAll(pageable);
+	    Page<Tarea> pagina = repository.findByUsuarioUsername(
+	            username,
+	            pageable);
 
 	    return pagina.map(tarea ->
 	            new TareaDTO(
@@ -97,12 +183,18 @@ public class TareaService {
 	
 	public Page<TareaDTO> obtenerTareasOrdenadas(int page, int size) {
 
+		String username = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication()
+	            .getName();
+		
 	    Pageable pageable = PageRequest.of(
 	            page,
 	            size,
 	            Sort.by("titulo").ascending());
 
-	    Page<Tarea> pagina = repository.findAll(pageable);
+	    Page<Tarea> pagina =
+	            repository.findByUsuarioUsername(username, pageable);
 
 	    return pagina.map(tarea ->
 	            new TareaDTO(
@@ -110,6 +202,21 @@ public class TareaService {
 	                    tarea.getTitulo()
 	            ));
 
+	}
+	
+	private Usuario obtenerUsuarioActual() {
+
+	    String username =
+	            SecurityContextHolder
+	                    .getContext()
+	                    .getAuthentication()
+	                    .getName();
+
+	    return usuarioRepository
+	            .findByUsername(username)
+	            .orElseThrow(() ->
+	                    new IllegalArgumentException(
+	                            "Usuario no encontrado"));
 	}
 
 }
