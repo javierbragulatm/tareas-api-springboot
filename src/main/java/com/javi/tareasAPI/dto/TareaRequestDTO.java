@@ -1,29 +1,18 @@
 package com.javi.tareasAPI.dto;
 
-public class TareaDTO {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-    private Integer id;
+public class TareaRequestDTO {
 
+    @NotBlank(message = "El titulo no puede estar vacio")
+    @Size(min = 3, max = 100, message = "El titulo debe tener entre 3 y 100 caracteres")
     private String titulo;
 
     private boolean completada;
 
-    public TareaDTO() {
+    public TareaRequestDTO() {
 
-    }
-
-    public TareaDTO(Integer id, String titulo, boolean completada) {
-        this.id = id;
-        this.titulo = titulo;
-        this.completada = completada;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getTitulo() {
