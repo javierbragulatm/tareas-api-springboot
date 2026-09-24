@@ -1,4 +1,4 @@
-package controller;
+package com.javi.tareasAPI.controller;
 
 import static org.mockito.Mockito.when;
 
@@ -15,7 +15,6 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.javi.tareasAPI.controller.AuthController;
 import com.javi.tareasAPI.dto.LoginRequest;
 import com.javi.tareasAPI.dto.RegisterRequest;
 import com.javi.tareasAPI.model.Usuario;

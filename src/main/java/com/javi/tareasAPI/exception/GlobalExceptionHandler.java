@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,16 +25,27 @@ public class GlobalExceptionHandler {
         return error;
     }
 
-    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> manejarValidaciones(
-            org.springframework.web.bind.MethodArgumentNotValidException ex) {
+            MethodArgumentNotValidException ex) {
 
         Map<String, String> errores = new HashMap<>();
 
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errores.put(error.getField(), error.getDefaultMessage());
-        });
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+
+            String campo = error.getField();
+
+            /*
+             * Si hay varios errores para el mismo campo,
+             * damos prioridad a @NotBlank sobre el resto.
+             */
+            if (!errores.containsKey(campo)
+                    || "NotBlank".equals(error.getCode())) {
+
+                errores.put(campo, error.getDefaultMessage());
+            }
+        }
 
         return errores;
     }
