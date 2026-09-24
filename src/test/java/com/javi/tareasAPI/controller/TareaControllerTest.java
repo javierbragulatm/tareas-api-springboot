@@ -26,6 +26,10 @@ import com.javi.tareasAPI.dto.TareaRequestDTO;
 import com.javi.tareasAPI.security.JwtService;
 import com.javi.tareasAPI.service.TareaService;
 
+import static org.mockito.Mockito.doThrow;
+
+import com.javi.tareasAPI.exception.TareaNoEncontradaException;
+
 @WebMvcTest(TareaController.class)
 public class TareaControllerTest {
 
@@ -275,4 +279,89 @@ public class TareaControllerTest {
         .andExpect(jsonPath("$.content[0].completada").value(false))
         .andExpect(jsonPath("$.content[0].usuario").doesNotExist());
     }
+    
+    @Test
+    public void obtenerTarea_deberiaDevolver404SiNoExiste() throws Exception {
+
+        when(service.obtenerTarea(99))
+                .thenThrow(new TareaNoEncontradaException(99));
+
+        mockMvc.perform(
+                get("/tareas/99")
+        )
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(jsonPath("$.error").value("Not Found"))
+        .andExpect(jsonPath("$.message")
+                .value("No existe la tarea con id 99"))
+        .andExpect(jsonPath("$.timestamp").exists());
+    }
+    
+    @Test
+    public void buscarConFiltros_deberiaRechazarPaginaNegativa()
+            throws Exception {
+
+        when(service.buscarConFiltros(
+                eq(null),
+                eq(null),
+                eq(-1),
+                eq(5),
+                eq("id"),
+                eq("asc")
+        )).thenThrow(
+                new IllegalArgumentException(
+                        "El número de página no puede ser negativo"
+                )
+        );
+
+        mockMvc.perform(
+                get("/tareas/filtrar")
+                        .param("page", "-1")
+                        .param("size", "5")
+                        .param("sort", "id")
+                        .param("direction", "asc")
+        )
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.message")
+                .value("El número de página no puede ser negativo"))
+        .andExpect(jsonPath("$.timestamp").exists());
+    }
+    
+    @Test
+    public void buscarConFiltros_deberiaRechazarParametroIncorrecto()
+            throws Exception {
+
+        mockMvc.perform(
+                get("/tareas/filtrar")
+                        .param("page", "abc")
+                        .param("size", "5")
+        )
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.message")
+                .value("El parámetro 'page' tiene un formato no válido"))
+        .andExpect(jsonPath("$.timestamp").exists());
+    }
+    
+    @Test
+    public void crearTarea_deberiaRechazarJSONIncorrecto()
+            throws Exception {
+
+        mockMvc.perform(
+                post("/tareas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{titulo: Spring Boot}")
+        )
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.message")
+                .value("El cuerpo de la petición no tiene un formato válido"))
+        .andExpect(jsonPath("$.timestamp").exists());
+    }
 }
+
+
