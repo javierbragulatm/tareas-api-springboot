@@ -26,8 +26,6 @@ import com.javi.tareasAPI.dto.TareaRequestDTO;
 import com.javi.tareasAPI.security.JwtService;
 import com.javi.tareasAPI.service.TareaService;
 
-import static org.mockito.Mockito.doThrow;
-
 import com.javi.tareasAPI.exception.TareaNoEncontradaException;
 
 @WebMvcTest(TareaController.class)
