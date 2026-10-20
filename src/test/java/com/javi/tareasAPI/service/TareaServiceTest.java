@@ -26,472 +26,337 @@ import com.javi.tareasAPI.model.Usuario;
 import com.javi.tareasAPI.repository.TareaRepository;
 import com.javi.tareasAPI.repository.UsuarioRepository;
 
+import com.javi.tareasAPI.messaging.TareaEventPublisher;
+
 public class TareaServiceTest {
 
-    @Mock
-    private TareaRepository repository;
+	@Mock
+	private TareaRepository repository;
 
-    @Mock
-    private UsuarioRepository usuarioRepository;
+	@Mock
+	private UsuarioRepository usuarioRepository;
 
-    @InjectMocks
-    private TareaService service;
+	@Mock
+	private TareaEventPublisher eventPublisher;
 
-    public TareaServiceTest() {
-        MockitoAnnotations.openMocks(this);
-    }
+	@InjectMocks
+	private TareaService service;
 
-    private void autenticarUsuario() {
+	public TareaServiceTest() {
+		MockitoAnnotations.openMocks(this);
+	}
 
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(
-                        "javi",
-                        null
-                )
-        );
-    }
+	private void autenticarUsuario() {
 
-    @AfterEach
-    public void limpiarSeguridad() {
-        SecurityContextHolder.clearContext();
-    }
+		SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("javi", null));
+	}
 
-    @Test
-    public void obtenerTareaExistente() {
+	@AfterEach
+	public void limpiarSeguridad() {
+		SecurityContextHolder.clearContext();
+	}
 
-        autenticarUsuario();
+	@Test
+	public void obtenerTareaExistente() {
 
-        Tarea tarea = new Tarea(1, "Spring", false);
+		autenticarUsuario();
 
-        when(repository.findByIdAndUsuarioUsername(1, "javi"))
-                .thenReturn(Optional.of(tarea));
+		Tarea tarea = new Tarea(1, "Spring", false);
 
-        TareaDTO resultado = service.obtenerTarea(1);
+		when(repository.findByIdAndUsuarioUsername(1, "javi")).thenReturn(Optional.of(tarea));
 
-        assertNotNull(resultado);
-        assertEquals(1, resultado.getId());
-        assertEquals("Spring", resultado.getTitulo());
-        assertFalse(resultado.isCompletada());
-    }
+		TareaDTO resultado = service.obtenerTarea(1);
 
-    @Test
-    public void crearTarea() {
+		assertNotNull(resultado);
+		assertEquals(1, resultado.getId());
+		assertEquals("Spring", resultado.getTitulo());
+		assertFalse(resultado.isCompletada());
+	}
 
-        autenticarUsuario();
+	@Test
+	public void crearTarea() {
 
-        TareaRequestDTO tareaDTO = new TareaRequestDTO();
-        tareaDTO.setTitulo("Docker");
-        tareaDTO.setCompletada(false);
+		autenticarUsuario();
 
-        Usuario usuario = new Usuario();
-        usuario.setUsername("javi");
+		TareaRequestDTO tareaDTO = new TareaRequestDTO();
+		tareaDTO.setTitulo("Docker");
+		tareaDTO.setCompletada(false);
 
-        when(usuarioRepository.findByUsername("javi"))
-                .thenReturn(Optional.of(usuario));
+		Usuario usuario = new Usuario();
+		usuario.setUsername("javi");
 
-        when(repository.save(any(Tarea.class)))
-                .thenAnswer(invocation -> {
-                    Tarea tarea = invocation.getArgument(0);
-                    tarea.setId(1);
-                    return tarea;
-                });
+		when(usuarioRepository.findByUsername("javi")).thenReturn(Optional.of(usuario));
 
-        TareaDTO resultado = service.crearTarea(tareaDTO);
+		when(repository.save(any(Tarea.class))).thenAnswer(invocation -> {
+			Tarea tarea = invocation.getArgument(0);
+			tarea.setId(1);
+			return tarea;
+		});
 
-        assertNotNull(resultado);
-        assertEquals(1, resultado.getId());
-        assertEquals("Docker", resultado.getTitulo());
-        assertFalse(resultado.isCompletada());
+		TareaDTO resultado = service.crearTarea(tareaDTO);
 
-        verify(usuarioRepository)
-                .findByUsername("javi");
+		assertNotNull(resultado);
+		assertEquals(1, resultado.getId());
+		assertEquals("Docker", resultado.getTitulo());
+		assertFalse(resultado.isCompletada());
 
-        verify(repository)
-                .save(any(Tarea.class));
-    }
+		verify(usuarioRepository).findByUsername("javi");
 
-    @Test
-    public void crearTarea_deberiaAsignarUsuarioActual() {
+		verify(repository).save(any(Tarea.class));
+		
 
-        autenticarUsuario();
+verify(eventPublisher).publicarTareaCreada(argThat(event ->
+        event.id().equals(1)
+                && event.titulo().equals("Docker")
+                && !event.completada()
+                && event.username().equals("javi")
+                && event.fechaCreacion() != null
+));
 
-        TareaRequestDTO tareaDTO = new TareaRequestDTO();
-        tareaDTO.setTitulo("Docker");
-        tareaDTO.setCompletada(false);
+	}
 
-        Usuario usuario = new Usuario();
-        usuario.setUsername("javi");
+	@Test
+	public void crearTarea_deberiaAsignarUsuarioActual() {
 
-        when(usuarioRepository.findByUsername("javi"))
-                .thenReturn(Optional.of(usuario));
+		autenticarUsuario();
 
-        when(repository.save(any(Tarea.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0));
+		TareaRequestDTO tareaDTO = new TareaRequestDTO();
+		tareaDTO.setTitulo("Docker");
+		tareaDTO.setCompletada(false);
 
-        TareaDTO resultado = service.crearTarea(tareaDTO);
+		Usuario usuario = new Usuario();
+		usuario.setUsername("javi");
 
-        assertNotNull(resultado);
-        assertEquals("Docker", resultado.getTitulo());
+		when(usuarioRepository.findByUsername("javi")).thenReturn(Optional.of(usuario));
 
-        ArgumentCaptor<Tarea> captor =
-                ArgumentCaptor.forClass(Tarea.class);
+		when(repository.save(any(Tarea.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(repository).save(captor.capture());
+		TareaDTO resultado = service.crearTarea(tareaDTO);
 
-        Tarea tareaGuardada = captor.getValue();
+		assertNotNull(resultado);
+		assertEquals("Docker", resultado.getTitulo());
 
-        assertEquals(usuario, tareaGuardada.getUsuario());
-        assertEquals("Docker", tareaGuardada.getTitulo());
-        assertFalse(tareaGuardada.isCompletada());
-    }
+		ArgumentCaptor<Tarea> captor = ArgumentCaptor.forClass(Tarea.class);
 
-    @Test
-    public void borrarTarea() {
+		verify(repository).save(captor.capture());
 
-        autenticarUsuario();
+		Tarea tareaGuardada = captor.getValue();
 
-        Tarea tarea = new Tarea(5, "Spring", false);
+		assertEquals(usuario, tareaGuardada.getUsuario());
+		assertEquals("Docker", tareaGuardada.getTitulo());
+		assertFalse(tareaGuardada.isCompletada());
+	}
 
-        when(repository.findByIdAndUsuarioUsername(5, "javi"))
-                .thenReturn(Optional.of(tarea));
+	@Test
+	public void borrarTarea() {
 
-        service.deleteTarea(5);
+		autenticarUsuario();
 
-        verify(repository).delete(tarea);
-    }
+		Tarea tarea = new Tarea(5, "Spring", false);
 
-    @Test
-    public void deleteTarea_deberiaRechazarTareaDeOtroUsuario() {
+		when(repository.findByIdAndUsuarioUsername(5, "javi")).thenReturn(Optional.of(tarea));
 
-        autenticarUsuario();
+		service.deleteTarea(5);
 
-        when(repository.findByIdAndUsuarioUsername(5, "javi"))
-                .thenReturn(Optional.empty());
+		verify(repository).delete(tarea);
+	}
 
-        assertThrows(
-                TareaNoEncontradaException.class,
-                () -> service.deleteTarea(5)
-        );
+	@Test
+	public void deleteTarea_deberiaRechazarTareaDeOtroUsuario() {
 
-        verify(repository, never())
-                .delete(any(Tarea.class));
-    }
+		autenticarUsuario();
 
-    @Test
-    public void obtenerCompletadas() {
+		when(repository.findByIdAndUsuarioUsername(5, "javi")).thenReturn(Optional.empty());
 
-        autenticarUsuario();
+		assertThrows(TareaNoEncontradaException.class, () -> service.deleteTarea(5));
 
-        service.obtenerCompletadas();
+		verify(repository, never()).delete(any(Tarea.class));
+	}
 
-        verify(repository)
-                .findByUsuarioUsernameAndCompletada(
-                        "javi",
-                        true
-                );
-    }
+	@Test
+	public void obtenerCompletadas() {
 
-    @Test
-    public void obtenerPendientes() {
+		autenticarUsuario();
 
-        autenticarUsuario();
+		service.obtenerCompletadas();
 
-        service.obtenerPendientes();
+		verify(repository).findByUsuarioUsernameAndCompletada("javi", true);
+	}
 
-        verify(repository)
-                .findByUsuarioUsernameAndCompletada(
-                        "javi",
-                        false
-                );
-    }
+	@Test
+	public void obtenerPendientes() {
 
-    @Test
-    public void obtenerTareas_deberiaDevolverSoloTareasDelUsuario() {
+		autenticarUsuario();
 
-        autenticarUsuario();
+		service.obtenerPendientes();
 
-        Tarea tarea1 = new Tarea(1, "Spring", false);
-        Tarea tarea2 = new Tarea(2, "Docker", true);
+		verify(repository).findByUsuarioUsernameAndCompletada("javi", false);
+	}
 
-        when(repository.findByUsuarioUsername("javi"))
-                .thenReturn(List.of(tarea1, tarea2));
+	@Test
+	public void obtenerTareas_deberiaDevolverSoloTareasDelUsuario() {
 
-        List<TareaDTO> resultado = service.obtenerTareas();
+		autenticarUsuario();
 
-        assertEquals(2, resultado.size());
+		Tarea tarea1 = new Tarea(1, "Spring", false);
+		Tarea tarea2 = new Tarea(2, "Docker", true);
 
-        assertEquals("Spring", resultado.get(0).getTitulo());
-        assertFalse(resultado.get(0).isCompletada());
+		when(repository.findByUsuarioUsername("javi")).thenReturn(List.of(tarea1, tarea2));
 
-        assertEquals("Docker", resultado.get(1).getTitulo());
-        assertTrue(resultado.get(1).isCompletada());
+		List<TareaDTO> resultado = service.obtenerTareas();
 
-        verify(repository)
-                .findByUsuarioUsername("javi");
-    }
+		assertEquals(2, resultado.size());
 
-    @Test
-    public void obtenerTarea_deberiaRechazarTareaDeOtroUsuario() {
+		assertEquals("Spring", resultado.get(0).getTitulo());
+		assertFalse(resultado.get(0).isCompletada());
 
-        autenticarUsuario();
+		assertEquals("Docker", resultado.get(1).getTitulo());
+		assertTrue(resultado.get(1).isCompletada());
 
-        when(repository.findByIdAndUsuarioUsername(5, "javi"))
-                .thenReturn(Optional.empty());
+		verify(repository).findByUsuarioUsername("javi");
+	}
 
-        assertThrows(
-                TareaNoEncontradaException.class,
-                () -> service.obtenerTarea(5)
-        );
-    }
+	@Test
+	public void obtenerTarea_deberiaRechazarTareaDeOtroUsuario() {
 
-    @Test
-    public void updateTarea_deberiaRechazarTareaDeOtroUsuario() {
+		autenticarUsuario();
 
-        autenticarUsuario();
+		when(repository.findByIdAndUsuarioUsername(5, "javi")).thenReturn(Optional.empty());
 
-        TareaRequestDTO tareaActualizada =
-                new TareaRequestDTO();
+		assertThrows(TareaNoEncontradaException.class, () -> service.obtenerTarea(5));
+	}
 
-        tareaActualizada.setTitulo("Nuevo titulo");
-        tareaActualizada.setCompletada(true);
+	@Test
+	public void updateTarea_deberiaRechazarTareaDeOtroUsuario() {
 
-        when(repository.findByIdAndUsuarioUsername(5, "javi"))
-                .thenReturn(Optional.empty());
+		autenticarUsuario();
 
-        assertThrows(
-                TareaNoEncontradaException.class,
-                () -> service.updateTarea(
-                        5,
-                        tareaActualizada
-                )
-        );
+		TareaRequestDTO tareaActualizada = new TareaRequestDTO();
 
-        verify(repository, never())
-                .save(any(Tarea.class));
-    }
+		tareaActualizada.setTitulo("Nuevo titulo");
+		tareaActualizada.setCompletada(true);
 
-    @Test
-    public void updateTarea_deberiaActualizarTarea() {
+		when(repository.findByIdAndUsuarioUsername(5, "javi")).thenReturn(Optional.empty());
 
-        autenticarUsuario();
+		assertThrows(TareaNoEncontradaException.class, () -> service.updateTarea(5, tareaActualizada));
 
-        Tarea tareaExistente =
-                new Tarea(5, "Titulo antiguo", false);
+		verify(repository, never()).save(any(Tarea.class));
+	}
 
-        TareaRequestDTO tareaActualizada =
-                new TareaRequestDTO();
+	@Test
+	public void updateTarea_deberiaActualizarTarea() {
 
-        tareaActualizada.setTitulo("Nuevo titulo");
-        tareaActualizada.setCompletada(true);
+		autenticarUsuario();
 
-        when(repository.findByIdAndUsuarioUsername(5, "javi"))
-                .thenReturn(Optional.of(tareaExistente));
+		Tarea tareaExistente = new Tarea(5, "Titulo antiguo", false);
 
-        when(repository.save(tareaExistente))
-                .thenReturn(tareaExistente);
+		TareaRequestDTO tareaActualizada = new TareaRequestDTO();
 
-        TareaDTO resultado =
-                service.updateTarea(
-                        5,
-                        tareaActualizada
-                );
+		tareaActualizada.setTitulo("Nuevo titulo");
+		tareaActualizada.setCompletada(true);
 
-        assertNotNull(resultado);
-        assertEquals(5, resultado.getId());
-        assertEquals("Nuevo titulo", resultado.getTitulo());
-        assertTrue(resultado.isCompletada());
+		when(repository.findByIdAndUsuarioUsername(5, "javi")).thenReturn(Optional.of(tareaExistente));
 
-        verify(repository)
-                .save(tareaExistente);
-    }
+		when(repository.save(tareaExistente)).thenReturn(tareaExistente);
 
-    @Test
-    public void buscarConFiltros_deberiaFiltrarPorTextoYEstado() {
+		TareaDTO resultado = service.updateTarea(5, tareaActualizada);
 
-        autenticarUsuario();
+		assertNotNull(resultado);
+		assertEquals(5, resultado.getId());
+		assertEquals("Nuevo titulo", resultado.getTitulo());
+		assertTrue(resultado.isCompletada());
 
-        Tarea tarea1 =
-                new Tarea(1, "Spring Boot", false);
+		verify(repository).save(tareaExistente);
+	}
 
-        Tarea tarea2 =
-                new Tarea(2, "Spring Security", false);
+	@Test
+	public void buscarConFiltros_deberiaFiltrarPorTextoYEstado() {
 
-        Page<Tarea> pagina =
-                new PageImpl<>(
-                        List.of(tarea1, tarea2)
-                );
+		autenticarUsuario();
 
-        when(repository.buscarConFiltros(
-                eq("javi"),
-                eq("Spring"),
-                eq(false),
-                any(Pageable.class)
-        )).thenReturn(pagina);
+		Tarea tarea1 = new Tarea(1, "Spring Boot", false);
 
-        Page<TareaDTO> resultado =
-                service.buscarConFiltros(
-                        "Spring",
-                        false,
-                        0,
-                        5,
-                        "titulo",
-                        "asc"
-                );
+		Tarea tarea2 = new Tarea(2, "Spring Security", false);
 
-        assertNotNull(resultado);
-        assertEquals(2, resultado.getContent().size());
+		Page<Tarea> pagina = new PageImpl<>(List.of(tarea1, tarea2));
 
-        assertEquals(
-                "Spring Boot",
-                resultado.getContent().get(0).getTitulo()
-        );
+		when(repository.buscarConFiltros(eq("javi"), eq("Spring"), eq(false), any(Pageable.class))).thenReturn(pagina);
 
-        assertEquals(
-                "Spring Security",
-                resultado.getContent().get(1).getTitulo()
-        );
+		Page<TareaDTO> resultado = service.buscarConFiltros("Spring", false, 0, 5, "titulo", "asc");
 
-        verify(repository)
-                .buscarConFiltros(
-                        eq("javi"),
-                        eq("Spring"),
-                        eq(false),
-                        any(Pageable.class)
-                );
-    }
+		assertNotNull(resultado);
+		assertEquals(2, resultado.getContent().size());
 
-    @Test
-    public void buscarConFiltros_deberiaPermitirPaginacionYOrdenacion() {
+		assertEquals("Spring Boot", resultado.getContent().get(0).getTitulo());
 
-        autenticarUsuario();
+		assertEquals("Spring Security", resultado.getContent().get(1).getTitulo());
 
-        Page<Tarea> pagina =
-                new PageImpl<>(
-                        List.of(
-                                new Tarea(1, "Docker", false)
-                        )
-                );
+		verify(repository).buscarConFiltros(eq("javi"), eq("Spring"), eq(false), any(Pageable.class));
+	}
 
-        when(repository.buscarConFiltros(
-                eq("javi"),
-                isNull(),
-                isNull(),
-                any(Pageable.class)
-        )).thenReturn(pagina);
+	@Test
+	public void buscarConFiltros_deberiaPermitirPaginacionYOrdenacion() {
 
-        Page<TareaDTO> resultado =
-                service.buscarConFiltros(
-                        null,
-                        null,
-                        1,
-                        10,
-                        "titulo",
-                        "desc"
-                );
+		autenticarUsuario();
 
-        assertEquals(1, resultado.getContent().size());
+		Page<Tarea> pagina = new PageImpl<>(List.of(new Tarea(1, "Docker", false)));
 
-        ArgumentCaptor<Pageable> captor =
-                ArgumentCaptor.forClass(Pageable.class);
+		when(repository.buscarConFiltros(eq("javi"), isNull(), isNull(), any(Pageable.class))).thenReturn(pagina);
 
-        verify(repository).buscarConFiltros(
-                eq("javi"),
-                isNull(),
-                isNull(),
-                captor.capture()
-        );
+		Page<TareaDTO> resultado = service.buscarConFiltros(null, null, 1, 10, "titulo", "desc");
 
-        Pageable pageable = captor.getValue();
+		assertEquals(1, resultado.getContent().size());
 
-        assertEquals(1, pageable.getPageNumber());
-        assertEquals(10, pageable.getPageSize());
+		ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
 
-        assertEquals(
-                "titulo",
-                pageable.getSort()
-                        .getOrderFor("titulo")
-                        .getProperty()
-        );
-    }
+		verify(repository).buscarConFiltros(eq("javi"), isNull(), isNull(), captor.capture());
 
-    @Test
-    public void buscarConFiltros_deberiaRechazarPaginaNegativa() {
+		Pageable pageable = captor.getValue();
 
-        autenticarUsuario();
+		assertEquals(1, pageable.getPageNumber());
+		assertEquals(10, pageable.getPageSize());
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.buscarConFiltros(
-                        null,
-                        null,
-                        -1,
-                        5,
-                        "id",
-                        "asc"
-                )
-        );
+		assertEquals("titulo", pageable.getSort().getOrderFor("titulo").getProperty());
+	}
 
-        verifyNoInteractions(repository);
-    }
+	@Test
+	public void buscarConFiltros_deberiaRechazarPaginaNegativa() {
 
-    @Test
-    public void buscarConFiltros_deberiaRechazarTamanoInvalido() {
+		autenticarUsuario();
 
-        autenticarUsuario();
+		assertThrows(IllegalArgumentException.class, () -> service.buscarConFiltros(null, null, -1, 5, "id", "asc"));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.buscarConFiltros(
-                        null,
-                        null,
-                        0,
-                        101,
-                        "id",
-                        "asc"
-                )
-        );
+		verifyNoInteractions(repository);
+	}
 
-        verifyNoInteractions(repository);
-    }
+	@Test
+	public void buscarConFiltros_deberiaRechazarTamanoInvalido() {
 
-    @Test
-    public void buscarConFiltros_deberiaRechazarCampoOrdenacionInvalido() {
+		autenticarUsuario();
 
-        autenticarUsuario();
+		assertThrows(IllegalArgumentException.class, () -> service.buscarConFiltros(null, null, 0, 101, "id", "asc"));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.buscarConFiltros(
-                        null,
-                        null,
-                        0,
-                        5,
-                        "password",
-                        "asc"
-                )
-        );
+		verifyNoInteractions(repository);
+	}
 
-        verifyNoInteractions(repository);
-    }
+	@Test
+	public void buscarConFiltros_deberiaRechazarCampoOrdenacionInvalido() {
 
-    @Test
-    public void buscarConFiltros_deberiaRechazarDireccionInvalida() {
+		autenticarUsuario();
 
-        autenticarUsuario();
+		assertThrows(IllegalArgumentException.class,
+				() -> service.buscarConFiltros(null, null, 0, 5, "password", "asc"));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.buscarConFiltros(
-                        null,
-                        null,
-                        0,
-                        5,
-                        "id",
-                        "pepito"
-                )
-        );
+		verifyNoInteractions(repository);
+	}
 
-        verifyNoInteractions(repository);
-    }
+	@Test
+	public void buscarConFiltros_deberiaRechazarDireccionInvalida() {
+
+		autenticarUsuario();
+
+		assertThrows(IllegalArgumentException.class, () -> service.buscarConFiltros(null, null, 0, 5, "id", "pepito"));
+
+		verifyNoInteractions(repository);
+	}
 }
