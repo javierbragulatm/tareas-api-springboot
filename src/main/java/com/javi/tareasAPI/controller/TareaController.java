@@ -20,6 +20,7 @@ import com.javi.tareasAPI.service.TareaService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import org.springframework.http.ResponseEntity;
 
@@ -27,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Tareas", description = "API REST para la gestión de tareas")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/tareas")
 public class TareaController {
