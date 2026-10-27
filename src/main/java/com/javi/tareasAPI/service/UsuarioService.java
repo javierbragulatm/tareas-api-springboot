@@ -22,13 +22,14 @@ public class UsuarioService {
 
     public Usuario registrarUsuario(String username, String password) {
 
-        if (usuarioRepository.existsByUsername(username)) {
+        String usernameNormalizado = username.trim();
+
+        if (usuarioRepository.existsByUsername(usernameNormalizado)) {
             throw new IllegalArgumentException("El usuario ya existe");
         }
 
         Usuario usuario = new Usuario();
-
-        usuario.setUsername(username);
+        usuario.setUsername(usernameNormalizado);
         usuario.setPassword(passwordEncoder.encode(password));
 
         return usuarioRepository.save(usuario);

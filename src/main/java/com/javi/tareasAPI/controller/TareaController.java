@@ -2,7 +2,6 @@ package com.javi.tareasAPI.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,8 +32,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/tareas")
 public class TareaController {
 
-	@Autowired
-	private TareaService service;
+	private final TareaService service;
+
+	public TareaController(TareaService service) {
+	    this.service = service;
+	}
 
 	@Operation(summary = "Obtiene todas las tareas")
 	@GetMapping
@@ -47,6 +49,12 @@ public class TareaController {
 	public ResponseEntity<Page<TareaDTO>> obtenerTareasPaginadas(
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "5") int size) {
+		
+		if (page < 0 || size < 1 || size > 100) {
+		    throw new IllegalArgumentException(
+		        "La página debe ser >= 0 y el tamaño debe estar entre 1 y 100"
+		    );
+		}
 
 		return ResponseEntity.ok(
 				service.obtenerTareasPaginadas(page, size)
@@ -58,6 +66,12 @@ public class TareaController {
 	public ResponseEntity<Page<TareaDTO>> obtenerTareasOrdenadas(
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "5") int size) {
+		
+		if (page < 0 || size < 1 || size > 100) {
+		    throw new IllegalArgumentException(
+		        "La página debe ser >= 0 y el tamaño debe estar entre 1 y 100"
+		    );
+		}
 
 		return ResponseEntity.ok(
 				service.obtenerTareasOrdenadas(page, size)

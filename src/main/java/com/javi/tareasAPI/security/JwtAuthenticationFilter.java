@@ -1,12 +1,15 @@
+
 package com.javi.tareasAPI.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,32 +35,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authorizationHeader == null
                 || !authorizationHeader.startsWith("Bearer ")) {
-
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authorizationHeader.substring(7);
+        String token = authorizationHeader.substring(7).trim();
 
         try {
-
             String username = jwtService.extraerUsername(token);
 
-            if (username != null
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null,
-                                null);
-
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
+            if (username == null || username.isBlank()) {
+                SecurityContextHolder.clearContext();
+                response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Token JWT no válido"
+                );
+                return;
             }
 
-        } catch (Exception e) {
-            // Token inválido: no autenticamos al usuario.
+            var authentication = new UsernamePasswordAuthenticationToken(
+                username,
+                null,
+                List.of()
+            );
+
+            SecurityContextHolder.getContext()
+                .setAuthentication(authentication);
+
+        } catch (JwtException | IllegalArgumentException ex) {
+            SecurityContextHolder.clearContext();
+            response.sendError(
+                HttpServletResponse.SC_UNAUTHORIZED,
+                "Token JWT no válido o expirado"
+            );
+            return;
         }
 
         filterChain.doFilter(request, response);
