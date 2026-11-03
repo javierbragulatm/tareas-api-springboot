@@ -28,6 +28,8 @@ import com.javi.tareasAPI.service.TareaService;
 
 import com.javi.tareasAPI.exception.TareaNoEncontradaException;
 
+import static org.hamcrest.Matchers.containsString;
+
 @WebMvcTest(TareaController.class)
 public class TareaControllerTest {
 
@@ -80,9 +82,12 @@ public class TareaControllerTest {
                         .content(objectMapper.writeValueAsString(request))
         )
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.titulo").value(
-                "El titulo no puede estar vacio"
-        ));
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.message", containsString(
+                "titulo: El titulo no puede estar vacio"
+        )))
+        .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
@@ -99,9 +104,12 @@ public class TareaControllerTest {
                         .content(objectMapper.writeValueAsString(request))
         )
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.titulo").value(
-                "El titulo debe tener entre 3 y 100 caracteres"
-        ));
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.message", containsString(
+                "titulo: El titulo debe tener entre 3 y 100 caracteres"
+        )))
+        .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
@@ -163,9 +171,12 @@ public class TareaControllerTest {
                         .content(objectMapper.writeValueAsString(request))
         )
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.titulo").value(
-                "El titulo no puede estar vacio"
-        ));
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.message", containsString(
+                "titulo: El titulo no puede estar vacio"
+        )))
+        .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test

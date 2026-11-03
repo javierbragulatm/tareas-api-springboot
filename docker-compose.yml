@@ -1,5 +1,4 @@
 
-
 services:
 
   mysql:
@@ -12,10 +11,17 @@ services:
       MYSQL_DATABASE: tareasdb
 
     ports:
-      - "3306:3306"
+      - "3307:3306"
 
     volumes:
       - mysql-data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   kafka:
     image: apache/kafka:4.1.1
@@ -63,7 +69,7 @@ services:
 
     depends_on:
       mysql:
-        condition: service_started
+        condition: service_healthy
       kafka:
         condition: service_healthy
 

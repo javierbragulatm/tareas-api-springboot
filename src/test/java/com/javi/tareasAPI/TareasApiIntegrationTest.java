@@ -139,7 +139,10 @@ class TareasApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(tarea))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.titulo").exists());
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
@@ -180,6 +183,30 @@ class TareasApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(login))
                 .andExpect(status().isUnauthorized());
+    }
+    
+    @Test
+    void usuarioConTokenInvalidoNoDeberiaPoderAccederATareas() throws Exception {
+
+        mockMvc.perform(get("/tareas")
+                .header("Authorization", "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized());
+    }
+    
+    @Test
+    void registrarUsuarioConPasswordCortaDeberiaDevolver400() throws Exception {
+
+        String registro = """
+                {
+                    "username": "usuario123",
+                    "password": "123"
+                }
+                """;
+
+        mockMvc.perform(post("/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registro))
+                .andExpect(status().isBadRequest());
     }
 
     private String obtenerToken(String username, String password) throws Exception {

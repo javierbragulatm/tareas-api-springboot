@@ -1,8 +1,6 @@
 package com.javi.tareasAPI.exception;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +8,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.validation.FieldError;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -32,24 +29,22 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> manejarValidaciones(
+    public ResponseEntity<ErrorResponseDTO> manejarValidaciones(
             MethodArgumentNotValidException ex) {
 
-        Map<String, String> errores = new HashMap<>();
+        String mensaje = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .distinct()
+                .collect(java.util.stream.Collectors.joining("; "));
 
-        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-
-            String campo = error.getField();
-
-            if (!errores.containsKey(campo)
-                    || "NotBlank".equals(error.getCode())) {
-
-                errores.put(campo, error.getDefaultMessage());
-            }
-        }
-
-        return errores;
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(crearErrorResponse(
+                        HttpStatus.BAD_REQUEST,
+                        mensaje
+                ));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
