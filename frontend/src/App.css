@@ -1,0 +1,54 @@
+
+.app {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 0 24px;
+  font-family: Arial, sans-serif;
+}
+
+.app h1 {
+  margin-bottom: 8px;
+}
+
+.app > p {
+  color: #777;
+  margin-bottom: 32px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: white;
+}
+
+.task-card h3 {
+  margin: 0 0 8px;
+}
+
+.task-card p {
+  margin: 0;
+  color: #777;
+}
+
+.task-card button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.task-card button:hover {
+  background: #1d4ed8;
+}
